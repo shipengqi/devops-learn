@@ -1,17 +1,13 @@
 ---
-title: My Site
-toc: false
+title: 主要内容
 ---
 
-This is the landing page.
+## 主要内容
 
-## Explore
-
-{{< cards >}}
-  {{< card link="docs" title="Docs" icon="book-open" >}}
-  {{< card link="about" title="About" icon="user" >}}
+{{< cards cols="2" >}}
+{{< card link="/devops-learn/docs/linux" title="Linux" >}}
+{{< card link="/devops-learn/docs/kubernetes" title="Kubernetes">}}
+{{< card link="/devops-learn/docs/jenkins" title="Jenkins" >}}
+{{< card link="/devops-learn/docs/cLoud" title="CLoud" >}}
+{{< card link="/devops-learn/docs/terraform" title="Terroform" >}}
 {{< /cards >}}
-
-## Documentation
-
-For more information, visit [Hextra](https://imfing.github.io/hextra).
