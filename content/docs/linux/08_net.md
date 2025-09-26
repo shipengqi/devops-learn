@@ -304,7 +304,7 @@ Keys:  Help   Display mode   Restart statistics   Order of fields   quit
 - `Wrst`：最差延迟（毫秒）。
 - `StDev`：延迟抖动（标准方差）。这个值越大，说明网络越不稳定。
 
-##### 使用场景
+#### 使用场景
 
 ```bash
 # 精确定位网络丢包和抖动问题（最核心的场景）
