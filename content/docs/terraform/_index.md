@@ -1,6 +1,7 @@
 ---
 title: Terraform
 weight: 5
+draft: false
 ---
 
 ## 什么是 IaC
