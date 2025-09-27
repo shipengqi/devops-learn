@@ -1,0 +1,253 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>DevOps Learning – 防火墻</title><link>https://shipengqi.github.io/devops-learn/docs/linux/firewall/</link><description>Recent content in 防火墻 on DevOps Learning</description><generator>Hugo -- gohugo.io</generator><language>en</language><atom:link href="https://shipengqi.github.io/devops-learn/docs/linux/firewall/index.xml" rel="self" type="application/rss+xml"/><item><title>iptables</title><link>https://shipengqi.github.io/devops-learn/docs/linux/firewall/01_iptables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/devops-learn/docs/linux/firewall/01_iptables/</guid><description>
+&lt;p&gt;iptables 的核心工作原理可以概括为：“&lt;strong&gt;根据规则，对数据包进行过滤或处理&lt;/strong&gt;”。这些规则被组织在预定义的链（Chains） 和表（Tables） 中。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Tables 由 Chains 组成，而 Chains 又由规则（Rules）组成&lt;/strong&gt;。&lt;/p&gt;
+&lt;h2&gt;核心思想&lt;span class="hx:absolute hx:-mt-20" id="核心思想"&gt;&lt;/span&gt;
+&lt;a href="#%e6%a0%b8%e5%bf%83%e6%80%9d%e6%83%b3" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;链&lt;span class="hx:absolute hx:-mt-20" id="链"&gt;&lt;/span&gt;
+&lt;a href="#%e9%93%be" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;链是规则的集合，这些规则&lt;strong&gt;按顺序排列&lt;/strong&gt;。数据包到达某个链时，会&lt;strong&gt;从第一条规则开始依次匹配，一旦匹配成功，就执行该规则定义的动作（如放行、拒绝），并停止后续匹配&lt;/strong&gt;。如果所有规则&lt;strong&gt;都不匹配，则执行该链的默认策略&lt;/strong&gt;（Policy）。&lt;/p&gt;
+&lt;p&gt;系统预定义了五个最重要的链（对应数据包流经的不同阶段）：：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;INPUT&lt;/strong&gt;：处理本机接收的数据包（例如，有人 ping 你的机器或 SSH 连接到你的机器）。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;OUTPUT&lt;/strong&gt;：处理本机发出的数据包（例如，你从本机 ping 别人）。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;FORWARD&lt;/strong&gt;：处理经过本机路由的数据包（你的机器充当路由器或网关时）。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;PREROUTING&lt;/strong&gt;：(nat 表) 数据包刚到达防火墙，&lt;strong&gt;在进行路由判断之前&lt;/strong&gt;（可用于修改目标地址，即 DNAT）。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;POSTROUTING&lt;/strong&gt;：(nat表) 数据包即将离开防火墙，&lt;strong&gt;在进行路由判断之后&lt;/strong&gt;（可用于修改源地址，即 SNAT）。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;表&lt;span class="hx:absolute hx:-mt-20" id="表"&gt;&lt;/span&gt;
+&lt;a href="#%e8%a1%a8" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;系统预定义了五个表，但最常用的是前两个：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;filter&lt;/code&gt; 表：&lt;strong&gt;负责过滤数据包，决定是否放行&lt;/strong&gt;。这是&lt;strong&gt;最常用&lt;/strong&gt;的表。
+&lt;ul&gt;
+&lt;li&gt;内置链：&lt;strong&gt;INPUT&lt;/strong&gt;, &lt;strong&gt;FORWARD&lt;/strong&gt;, &lt;strong&gt;OUTPUT&lt;/strong&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;nat&lt;/code&gt; 表：&lt;strong&gt;负责网络地址转换（NAT）&lt;/strong&gt;。
+&lt;ul&gt;
+&lt;li&gt;内置链：&lt;strong&gt;PREROUTING (DNAT)&lt;/strong&gt;, &lt;strong&gt;OUTPUT&lt;/strong&gt;, &lt;strong&gt;POSTROUTING (SNAT)&lt;/strong&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;mangle&lt;/code&gt; 表：&lt;strong&gt;负责修改数据包的头信息（如 TTL、TOS）&lt;/strong&gt;。
+&lt;ul&gt;
+&lt;li&gt;内置链：所有五个链 (&lt;strong&gt;PREROUTING&lt;/strong&gt;, &lt;strong&gt;INPUT&lt;/strong&gt;, &lt;strong&gt;FORWARD&lt;/strong&gt;, &lt;strong&gt;OUTPUT&lt;/strong&gt;, &lt;strong&gt;POSTROUTING&lt;/strong&gt;)。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;raw&lt;/code&gt; 表：负责连接跟踪机制的处理（如决定是否对数据包进行状态跟踪）。
+&lt;ul&gt;
+&lt;li&gt;内置链：&lt;strong&gt;PREROUTING&lt;/strong&gt;, &lt;strong&gt;OUTPUT&lt;/strong&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;security&lt;/code&gt; 表（较少用）：用于强制访问控制（MAC）网络规则。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;小结&lt;span class="hx:absolute hx:-mt-20" id="小结"&gt;&lt;/span&gt;
+&lt;a href="#%e5%b0%8f%e7%bb%93" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;表和链的关系：你可以想象&lt;strong&gt;数据包流经一条“链”时，会依次经过挂在这条链上的不同“表”的规则检查&lt;/strong&gt;。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;表的优先级顺序决定了检查的先后次序&lt;/strong&gt;：&lt;code&gt;raw -&amp;gt; mangle -&amp;gt; nat -&amp;gt; filter&lt;/code&gt;。&lt;/p&gt;
+&lt;h2&gt;工作流程：数据包的一生&lt;span class="hx:absolute hx:-mt-20" id="工作流程数据包的一生"&gt;&lt;/span&gt;
+&lt;a href="#%e5%b7%a5%e4%bd%9c%e6%b5%81%e7%a8%8b%e6%95%b0%e6%8d%ae%e5%8c%85%e7%9a%84%e4%b8%80%e7%94%9f" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;img src="" alt="iptables-data-flow" loading="lazy" /&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;入口 (PREROUTING)&lt;/strong&gt;：
+&lt;ul&gt;
+&lt;li&gt;数据包从网卡进入系统。&lt;/li&gt;
+&lt;li&gt;首先经过 &lt;strong&gt;PREROUTING&lt;/strong&gt; 链。这里会依次应用 &lt;strong&gt;raw、mangle、nat&lt;/strong&gt; 表中的规则。&lt;/li&gt;
+&lt;li&gt;关键：在 &lt;strong&gt;nat&lt;/strong&gt; 表的 &lt;strong&gt;PREROUTING&lt;/strong&gt; 链中，可以做 &lt;strong&gt;DNAT（目标地址转换）&lt;/strong&gt;，&lt;strong&gt;比如把访问公网IP 80 端口的数据包转发到内网服务器的 &lt;code&gt;192.168.1.10:80&lt;/code&gt;&lt;/strong&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;路由判断 (Routing Decision)&lt;/strong&gt;：
+&lt;ul&gt;
+&lt;li&gt;内核查看数据包的目标 IP 地址，决定这个包是发给&lt;strong&gt;本机的（走 INPUT 链）&lt;strong&gt;还是需要&lt;/strong&gt;转发的（走 FORWARD 链）&lt;/strong&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;发给本机 (INPUT)&lt;/strong&gt;：
+&lt;ul&gt;
+&lt;li&gt;数据包进入 INPUT 链。这里会依次应用 mangle 和 filter 表中的规则。&lt;/li&gt;
+&lt;li&gt;关键：在 &lt;strong&gt;filter 表的 INPUT 链&lt;/strong&gt;中，设置&lt;strong&gt;防火墙规则的主要地方&lt;/strong&gt;。比如只允许特定 IP 访问本机的 SSH 端口。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;本机进程处理&lt;/strong&gt;：
+&lt;ul&gt;
+&lt;li&gt;数据包被本机的用户进程（如 web 服务器、SSH 服务）接收和处理。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;本机发出 (OUTPUT)&lt;/strong&gt;：
+&lt;ul&gt;
+&lt;li&gt;本机进程产生新的数据包，准备发送出去。&lt;/li&gt;
+&lt;li&gt;数据包进入 OUTPUT 链。这里会依次应用 raw、mangle、nat、filter 表中的规则。&lt;/li&gt;
+&lt;li&gt;关键：在 &lt;strong&gt;filter 表的 OUTPUT 链&lt;/strong&gt;中，&lt;strong&gt;可以控制本机能发出哪些数据包&lt;/strong&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;转发 (FORWARD)&lt;/strong&gt;：
+&lt;ul&gt;
+&lt;li&gt;如果数据包是转发的（第2步判断），则进入 FORWARD 链。&lt;/li&gt;
+&lt;li&gt;这里会依次应用 mangle 和 filter 表中的规则。&lt;/li&gt;
+&lt;li&gt;关键：在 &lt;strong&gt;filter 表的 FORWARD 链&lt;/strong&gt;中，&lt;strong&gt;设置转发规则的主要地方&lt;/strong&gt;。比如允许内网网段访问互联网，但禁止两个内网网段之间互访。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;出口 (POSTROUTING)&lt;/strong&gt;：
+&lt;ul&gt;
+&lt;li&gt;所有即将从网卡发出的数据包（&lt;strong&gt;无论是本机产生的还是转发的&lt;/strong&gt;），&lt;strong&gt;最后都要经过 POSTROUTING 链&lt;/strong&gt;。&lt;/li&gt;
+&lt;li&gt;这里会依次应用 mangle 和 nat 表中的规则。&lt;/li&gt;
+&lt;li&gt;关键：在 &lt;strong&gt;nat 表的 POSTROUTING 链&lt;/strong&gt;中，&lt;strong&gt;可以做 SNAT（源地址转换），也就是常说的“IP伪装”（Masquerading），让内网机器共享一个公网IP上网&lt;/strong&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;离开&lt;/strong&gt;：数据包离开网卡，前往下一个目的地。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2&gt;规则匹配与动作（Target）&lt;span class="hx:absolute hx:-mt-20" id="规则匹配与动作target"&gt;&lt;/span&gt;
+&lt;a href="#%e8%a7%84%e5%88%99%e5%8c%b9%e9%85%8d%e4%b8%8e%e5%8a%a8%e4%bd%9ctarget" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;每条规则都由两部分组成：&lt;strong&gt;匹配条件&lt;/strong&gt;（Matches） 和 &lt;strong&gt;动作&lt;/strong&gt;（Target）。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;匹配条件&lt;/strong&gt;：例如 &lt;code&gt;-p tcp --dport 22&lt;/code&gt;（协议是 TCP 且目标端口是 22）、&lt;code&gt;-s 192.168.1.100&lt;/code&gt;（源 IP 是 &lt;code&gt;192.168.1.100&lt;/code&gt;）。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;动作&lt;/strong&gt;（Target）：当数据包匹配规则后要执行的操作。常见的有：
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;ACCEPT&lt;/strong&gt;：接受数据包，允许其通过。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;DROP&lt;/strong&gt;：丢弃数据包，没有任何响应。就像对方从来没发过这个包一样。更安全。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;REJECT&lt;/strong&gt;：拒绝数据包，并向发送方返回一个 connection refused 的错误消息。更友好。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;SNAT&lt;/strong&gt;：在 nat 表中使用，修改源地址。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;DNAT&lt;/strong&gt;：在 nat 表中使用，修改目标地址。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;MASQUERADE&lt;/strong&gt;：是 SNAT 的一种特殊形式，适用于动态获取 IP 的场合（如拨号上网）。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;LOG&lt;/strong&gt;：将匹配的数据包信息记录到系统日志（&lt;code&gt;/var/log/messages&lt;/code&gt; 等），然后继续匹配后续规则。用于调试。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;命令&lt;span class="hx:absolute hx:-mt-20" id="命令"&gt;&lt;/span&gt;
+&lt;a href="#%e5%91%bd%e4%bb%a4" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;命令格式：&lt;code&gt;iptables [-t 表] 命令选项 [规则链] 规则&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;-t&lt;/code&gt; 选项默认使用的是 filter 表。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;命令选项&lt;span class="hx:absolute hx:-mt-20" id="命令选项"&gt;&lt;/span&gt;
+&lt;a href="#%e5%91%bd%e4%bb%a4%e9%80%89%e9%a1%b9" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;-A&lt;/code&gt; (Append) 在链的末尾追加一条新规则。
+&lt;ul&gt;
+&lt;li&gt;例如：&lt;code&gt;iptables -A INPUT -s 192.168.1.100 -j DROP&lt;/code&gt; 表示在 INPUT 链的末尾追加一条规则，当源 IP 是 &lt;code&gt;192.168.1.100&lt;/code&gt; 时，拒绝该数据包。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-I&lt;/code&gt; (Insert) 在链的指定位置插入一条新规则（默认为第1条）。
+&lt;ul&gt;
+&lt;li&gt;例如：&lt;code&gt;iptables -I INPUT 3 -p tcp --dport 80 -j ACCEPT&lt;/code&gt; 表示在 INPUT 链的第 3 条位置插入一条规则，当协议是 TCP 且目标端口是 80 时，接受该数据包。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-D&lt;/code&gt; (Delete) 从链中删除一条规则。
+&lt;ul&gt;
+&lt;li&gt;例如：&lt;code&gt;iptables -D INPUT -s 192.168.1.100 -j DROP&lt;/code&gt; 表示从 INPUT 链中删除一条规则，当源 IP 是 &lt;code&gt;192.168.1.100&lt;/code&gt; 时，拒绝该数据包。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-F&lt;/code&gt; (Flush) 清空指定链（或所有链）的所有规则。
+&lt;ul&gt;
+&lt;li&gt;例如：&lt;code&gt;iptables -F INPUT&lt;/code&gt; 表示清空 INPUT 链的所有规则。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-L&lt;/code&gt; (List) 列出指定链（或所有链）的所有规则。
+&lt;ul&gt;
+&lt;li&gt;例如：&lt;code&gt;iptables -L -n -v&lt;/code&gt; 表示列出所有链的所有规则，且不显示 IP 地址和端口号，而是显示数字形式的 IP 地址和端口号。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-N&lt;/code&gt; (New) 创建一条新的用户自定义链。
+&lt;ul&gt;
+&lt;li&gt;例如：&lt;code&gt;iptables -N CUSTOM_CHAIN&lt;/code&gt; 表示创建一条名为 CUSTOM_CHAIN 的用户自定义链。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-X&lt;/code&gt; (Delete chain) 删除一条用户自定义链。
+&lt;ul&gt;
+&lt;li&gt;例如：&lt;code&gt;iptables -X CUSTOM_CHAIN&lt;/code&gt; 表示删除名为 CUSTOM_CHAIN 的用户自定义链。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-P&lt;/code&gt; (Policy) 设置链的默认策略（所有规则都不匹配时执行的动作）。
+&lt;ul&gt;
+&lt;li&gt;例如：&lt;code&gt;iptables -P INPUT DROP&lt;/code&gt; 表示设置 INPUT 链的默认策略为 DROP，即所有不匹配的数据包都被拒绝。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;规则选项&lt;span class="hx:absolute hx:-mt-20" id="规则选项"&gt;&lt;/span&gt;
+&lt;a href="#%e8%a7%84%e5%88%99%e9%80%89%e9%a1%b9" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;-i&lt;/code&gt; 输入网口&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-o&lt;/code&gt; 输出网口&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-p&lt;/code&gt; 匹配网络协议：tcp、udp、icmp&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--icmp-type type&lt;/code&gt; 匹配 ICMP 类型，和 &lt;code&gt;-p icmp&lt;/code&gt; 配合使用。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-s&lt;/code&gt; 匹配来源主机（或网络）的IP地址&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--sport port&lt;/code&gt; 匹配来源主机的端口，和 &lt;code&gt;-s source-ip&lt;/code&gt; 配合使用。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-d&lt;/code&gt; 匹配目标主机的 IP 地址&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--dport port&lt;/code&gt; 匹配目标主机（或网络）的端口，和 &lt;code&gt;-d dest-ip&lt;/code&gt; 配合使用。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-j&lt;/code&gt; 动作：指定规则匹配后要执行的动作。
+&lt;ul&gt;
+&lt;li&gt;例如：&lt;code&gt;-j ACCEPT&lt;/code&gt; 表示接受该数据包。&lt;/li&gt;
+&lt;li&gt;例如：&lt;code&gt;-j DROP&lt;/code&gt; 表示拒绝该数据包。&lt;/li&gt;
+&lt;li&gt;例如：&lt;code&gt;-j LOG&lt;/code&gt; 表示记录该数据包的信息到系统日志。&lt;/li&gt;
+&lt;li&gt;例如：&lt;code&gt;-j SNAT --to-source 192.168.1.100&lt;/code&gt; 表示修改源地址为 &lt;code&gt;192.168.1.100&lt;/code&gt;。&lt;/li&gt;
+&lt;li&gt;例如：&lt;code&gt;-j DNAT --to-destination 192.168.1.100&lt;/code&gt; 表示修改目标地址为 &lt;code&gt;192.168.1.100&lt;/code&gt;。&lt;/li&gt;
+&lt;li&gt;例如：&lt;strong&gt;&lt;code&gt;-j CUSTOM_CHAIN&lt;/code&gt; 表示跳转到名为 CUSTOM_CHAIN 的用户自定义链&lt;/strong&gt;。&lt;/li&gt;
+&lt;li&gt;例如：&lt;code&gt;-j MASQUERADE&lt;/code&gt; 表示使用动态获取的 IP 地址进行 SNAT。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;使用场景&lt;span class="hx:absolute hx:-mt-20" id="使用场景"&gt;&lt;/span&gt;
+&lt;a href="#%e4%bd%bf%e7%94%a8%e5%9c%ba%e6%99%af" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 1. 设置默认策略（最严格的策略）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;iptables -P INPUT DROP &lt;span class="c1"&gt;# 默认拒绝所有入站&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;iptables -P FORWARD DROP &lt;span class="c1"&gt;# 默认拒绝所有转发&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;iptables -P OUTPUT ACCEPT &lt;span class="c1"&gt;# 默认允许所有出站（通常这样设置）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 2. 允许本地回环接口（localhost通信）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;iptables -A INPUT -i lo -j ACCEPT
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 3. 允许已建立的和相关连接通过（关键！否则无法收到响应包）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 4. 允许ICMP（ping命令）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;iptables -A INPUT -p icmp -j ACCEPT
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 5. 开放特定服务端口（按需添加）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;iptables -A INPUT -p tcp --dport &lt;span class="m"&gt;22&lt;/span&gt; -j ACCEPT &lt;span class="c1"&gt;# SSH&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;iptables -A INPUT -p tcp --dport &lt;span class="m"&gt;80&lt;/span&gt; -j ACCEPT &lt;span class="c1"&gt;# HTTP&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;iptables -A INPUT -p tcp --dport &lt;span class="m"&gt;443&lt;/span&gt; -j ACCEPT &lt;span class="c1"&gt;# HTTPS&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 进入防火墙的数据包目的地址转换，从网口 eth0 进入的数据包，把目的 IP 为 114.115.116.117，端口为 80 的数据包，转到 10.0.0.1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 这里外网用户访问公网地址 114.115.116.117:80，防火墙再转发到内网地址&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;iptables -t nat -A PREROUTING -i eth0 -d 114.115.116.117 -p tcp --dport &lt;span class="m"&gt;80&lt;/span&gt; -j DNAT --to-destination 10.0.0.1
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 源地址转换，源地址 10.0.0.0/24 ，从网口 eth1 发出，并把源地址伪装成 111.112.113.114，响应回来后再转换为源地址&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 这里是内网地址 10.0.0.0/24 主机访问外网，会将内网地址伪装成公网 IP 111.112.113.114&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -i eth1 -j SNAT --to-source 111.112.113.114&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;规则的顺序问题&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;规则的顺序很重要，&lt;strong&gt;先匹配的规则先执行&lt;/strong&gt;。&lt;/li&gt;
+&lt;li&gt;如果没有匹配的规则，那么就会使用默认策略。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 可以接收从 IP 为 10.0.0.1 发送的数据包&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;iptables -t filter -A INPUT -s 10.0.0.1 -j ACCEPT
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;iptables -A INPUT -s 10.0.0.2 -j ACCEPT
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;iptables -A INPUT -s 10.0.0.2 -j DROP&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;INPUT 链配置了两条规则：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;分别是接收 IP 为 &lt;code&gt;10.0.0.2&lt;/code&gt; 的数据包；&lt;/li&gt;
+&lt;li&gt;和丢弃 IP 为 &lt;code&gt;10.0.0.2&lt;/code&gt; 的数据包。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;那么 &lt;code&gt;10.0.0.2&lt;/code&gt; 的数据包能不能进来？&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;可以&lt;/strong&gt;。数据包会先匹配前面的 &lt;code&gt;ACCEPT 10.0.0.2&lt;/code&gt; 的规则，这个时候数据包就进入了系统，所以规则顺序很重要。&lt;strong&gt;可以使用 &lt;code&gt;-I&lt;/code&gt; 把规则从头插入&lt;/strong&gt;：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;iptables -I INPUT -s 10.0.0.2 -j ACCEPT&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item><item><title>firewalld</title><link>https://shipengqi.github.io/devops-learn/docs/linux/firewall/02_firewalld/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/devops-learn/docs/linux/firewall/02_firewalld/</guid><description/></item></channel></rss>
