@@ -3,6 +3,7 @@ title: My Site
 
 # import hextra as module
 module:
+  proxy: https://goproxy.cn # 设置代理
   imports:
     - path: github.com/imfing/hextra
 
