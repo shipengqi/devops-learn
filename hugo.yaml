@@ -1,7 +1,7 @@
 # Hugo configuration file
-title: My Site
+baseURL: "https://shipengqi.github.io/devops-learn"
+title: "DevOps Learning"
 
-# import hextra as module
 module:
   proxy: https://goproxy.cn # 设置代理
   imports:
@@ -19,29 +19,23 @@ markup:
 
 menu:
   main:
-    - name: Docs
-      pageRef: /docs
+    - identifier: documentation
+      name: Documentation
+      pageRef: /docs/linux
       weight: 1
-    - name: About
-      pageRef: /about
+    - identifier: blog
+      name: Blog
+      url: "https://shipengqi.github.io"
       weight: 2
-    - name: Contact ↗
-      url: "https://github.com/imfing"
-      weight: 3
     - name: Search
-      weight: 4
+      weight: 3
       params:
         type: search
     - name: GitHub
-      weight: 5
-      url: "https://github.com/imfing/hextra-starter-template"
+      weight: 4
+      url: "https://github.com/shipengqi/devops-learn"
       params:
         icon: github
-    - name: Twitter
-      weight: 6
-      url: "https://twitter.com/"
-      params:
-        icon: x-twitter
 
 params:
   navbar:

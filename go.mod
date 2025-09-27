@@ -1,4 +1,4 @@
-module github.com/imfing/hextra-starter-template
+module github.com/shipengqi/devops-learn
 
 go 1.24
 
