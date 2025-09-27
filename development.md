@@ -15,6 +15,7 @@ baseURL: "https://shipengqi.github.io/devops-learn"
 title: "DevOps Learning"
 
 module:
+  proxy: https://goproxy.cn # 设置代理
   imports:
     - path: github.com/imfing/hextra
 ```
