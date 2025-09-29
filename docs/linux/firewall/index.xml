@@ -41,7 +41,7 @@
 &lt;a href="#%e5%b0%8f%e7%bb%93" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;表和链的关系：你可以想象&lt;strong&gt;数据包流经一条“链”时，会依次经过挂在这条链上的不同“表”的规则检查&lt;/strong&gt;。&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;表的优先级顺序决定了检查的先后次序&lt;/strong&gt;：&lt;code&gt;raw -&amp;gt; mangle -&amp;gt; nat -&amp;gt; filter&lt;/code&gt;。&lt;/p&gt;
 &lt;h2&gt;工作流程：数据包的一生&lt;span class="hx:absolute hx:-mt-20" id="工作流程数据包的一生"&gt;&lt;/span&gt;
-&lt;a href="#%e5%b7%a5%e4%bd%9c%e6%b5%81%e7%a8%8b%e6%95%b0%e6%8d%ae%e5%8c%85%e7%9a%84%e4%b8%80%e7%94%9f" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;img src="" alt="iptables-data-flow" loading="lazy" /&gt;&lt;/p&gt;
+&lt;a href="#%e5%b7%a5%e4%bd%9c%e6%b5%81%e7%a8%8b%e6%95%b0%e6%8d%ae%e5%8c%85%e7%9a%84%e4%b8%80%e7%94%9f" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/refs/heads/main/devops/iptable-data-flow.png" alt="iptables-data-flow" width="70%"&gt;
 &lt;ol&gt;
 &lt;li&gt;&lt;strong&gt;入口 (PREROUTING)&lt;/strong&gt;：
 &lt;ul&gt;
@@ -174,6 +174,31 @@
 &lt;li&gt;例如：&lt;code&gt;-j MASQUERADE&lt;/code&gt; 表示使用动态获取的 IP 地址进行 SNAT。&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;probability&lt;span class="hx:absolute hx:-mt-20" id="probability"&gt;&lt;/span&gt;
+&lt;a href="#probability" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;iptables 的 statistic 模块支持&lt;strong&gt;基于概率的规则匹配&lt;/strong&gt;，通过 &lt;code&gt;--mode random&lt;/code&gt; 和 &lt;code&gt;--probability&lt;/code&gt; 参数实现随机匹配。此功能常用于负载均衡或流量分配。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;iptables -A PREROUTING -t nat -p tcp -d 192.168.1.1 --dport &lt;span class="m"&gt;27017&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="se"&gt;&lt;/span&gt; -m statistic --mode random --probability 0.33 &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="se"&gt;&lt;/span&gt; -j DNAT --to-destination 10.0.0.2:1234
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;iptables -A PREROUTING -t nat -p tcp -d 192.168.1.1 --dport &lt;span class="m"&gt;27017&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="se"&gt;&lt;/span&gt; -m statistic --mode random --probability 0.5 &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="se"&gt;&lt;/span&gt; -j DNAT --to-destination 10.0.0.3:1234
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;iptables -A PREROUTING -t nat -p tcp -d 192.168.1.1 --dport &lt;span class="m"&gt;27017&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="se"&gt;&lt;/span&gt; -j DNAT --to-destination 10.0.0.4:1234&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;第一条规则有 &lt;code&gt;33%&lt;/code&gt; 的概率命中。&lt;/li&gt;
+&lt;li&gt;第二条规则有 &lt;code&gt;50% × (1 − 33%) = 33%&lt;/code&gt; 的概率命中。&lt;/li&gt;
+&lt;li&gt;第三条规则没有指定 &lt;code&gt;--probability&lt;/code&gt;，因此剩余的 &lt;code&gt;34%&lt;/code&gt; 流量会命中。&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3&gt;使用场景&lt;span class="hx:absolute hx:-mt-20" id="使用场景"&gt;&lt;/span&gt;
 &lt;a href="#%e4%bd%bf%e7%94%a8%e5%9c%ba%e6%99%af" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
