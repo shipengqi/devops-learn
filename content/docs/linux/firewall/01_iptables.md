@@ -43,7 +43,7 @@ iptables 的核心工作原理可以概括为：“**根据规则，对数据包
 
 ## 工作流程：数据包的一生
 
-![iptables-data-flow]()
+<img src="https://raw.githubusercontent.com/shipengqi/illustrations/refs/heads/main/devops/iptable-data-flow.png" alt="iptables-data-flow" width="70%">
 
 1. **入口 (PREROUTING)**：
    - 数据包从网卡进入系统。
@@ -126,6 +126,25 @@ iptables 的核心工作原理可以概括为：“**根据规则，对数据包
   - 例如：`-j DNAT --to-destination 192.168.1.100` 表示修改目标地址为 `192.168.1.100`。
   - 例如：**`-j CUSTOM_CHAIN` 表示跳转到名为 CUSTOM_CHAIN 的用户自定义链**。
   - 例如：`-j MASQUERADE` 表示使用动态获取的 IP 地址进行 SNAT。
+
+### probability
+
+iptables 的 statistic 模块支持**基于概率的规则匹配**，通过 `--mode random` 和 `--probability` 参数实现随机匹配。此功能常用于负载均衡或流量分配。
+
+```bash
+iptables -A PREROUTING -t nat -p tcp -d 192.168.1.1 --dport 27017 \
+   -m statistic --mode random --probability 0.33 \
+   -j DNAT --to-destination 10.0.0.2:1234
+iptables -A PREROUTING -t nat -p tcp -d 192.168.1.1 --dport 27017 \
+   -m statistic --mode random --probability 0.5 \
+   -j DNAT --to-destination 10.0.0.3:1234
+iptables -A PREROUTING -t nat -p tcp -d 192.168.1.1 --dport 27017 \
+   -j DNAT --to-destination 10.0.0.4:1234
+```
+
+- 第一条规则有 `33%` 的概率命中。
+- 第二条规则有 `50% × (1 − 33%) = 33%` 的概率命中。
+- 第三条规则没有指定 `--probability`，因此剩余的 `34%` 流量会命中。
 
 ### 使用场景
 
