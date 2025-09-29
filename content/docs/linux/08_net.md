@@ -343,3 +343,200 @@ traceroute -n -p 443 example.com
 
 ### tcpdump
 
+```bash
+tcpdump -i any
+
+07:02:12.195611 IP test.ya.local.59915 > c2.shared.ssh: Flags [.], ack 1520940, win 2037, options [nop,nop,TS val 1193378555 ecr 428247729], length 0
+07:02:12.195629 IP c2.shared.ssh > test.ya.local.59915: Flags [P.], seq 1520940:1521152, ack 1009, win 315, options [nop,nop,TS val 428247729 ecr 1193378555], length 212
+07:02:12.195677 IP test.ya.local.59915 > c2.shared.ssh: Flags [.], ack 1521152, win 2044, options [nop,nop,TS val 1193378555 ecr 428247729], length 0
+07:02:12.195730 IP c2.shared.ssh > test.ya.local.59915: Flags [P.], seq 1521152:1521508, ack 1009, win 315, options [nop,nop,TS val 428247730 ecr 1193378555], length 356
+```
+
+- `-i`：**指定网卡，`any` 表示任意网卡**。如果只需要查看某个网卡的数据包，例如 `ehh0`，使用 `tcpdump -i eth0`。
+
+#### 过滤主机
+
+如果只想查看 ip 为 `10.211.55.2` 的网络包，这个 ip 可以是源地址也可以是目标地址：
+
+```bash
+tcpdump -i any host 10.211.55.2
+```
+
+#### 过滤源地址、目标地址
+
+只抓取源地址是 `10.211.55.11` 的包：
+
+```bash
+tcpdump -i any src 10.211.55.11
+```
+
+只抓取目标地址为 `10.211.55.11` 的包：
+
+```bash
+tcpdump -i any dst 10.211.55.11
+```
+
+#### 过滤端口
+
+只抓取某个端口的数据包，比如查看 80 端口的数据包：
+
+```bash
+tcpdump -i any port 80
+```
+
+只想抓取目标端口为 80 的数据包，也就是 80 端口收到的包，可以加上 `dst`：
+
+```bash
+tcpdump -i any dst port 80
+```
+
+#### 过滤指定端口范围内的流量
+
+抓取 21 到 23 区间所有端口的流量：
+
+```bash
+tcpdump portrange 21-23
+```
+
+#### 禁用主机与端口解析
+
+不加 `-n` 选项，tcpdump 会显示主机名，比如下面的 `test.ya.local` 和 `c2.shared`：
+
+```bash
+09:04:56.821206 IP test.ya.local.59915 > c2.shared.ssh: Flags [P.], seq 397:433, ack 579276, win 2048, options [nop,nop,TS val 1200089877 ecr 435612355], length 36
+```
+
+加上 `-n` 选项以后，可以看到主机名都已经被替换成了 ip：
+
+```bash
+tcpdump -i any  -n
+10:02:13.705656 IP 10.211.55.2.59915 > 10.211.55.10.ssh: Flags [P.], seq 829:865, ack 1228756, win 2048, options [nop,nop,TS val 1203228910 ecr 439049239], length 36
+```
+
+**常用端口还是会被转换成协议名**，比如 ssh 协议的 22 端口。如果不想 tcpdump 做转换，可以加上 `-nn`，这样就不会解析端口了，输出中的 ssh 变为了 22：
+
+```bash
+tcpdump -i any  -nn
+
+10:07:37.598725 IP 10.211.55.2.59915 > 10.211.55.10.22: Flags [P.], seq 685:721, ack 1006224, win 2048, options [nop,nop,TS val 1203524536 ecr 439373132], length 36
+```
+
+#### 过滤协议
+
+只查看 udp 协议：
+
+```bash
+tcpdump -i any -nn udp
+
+10:25:31.457517 IP 10.211.55.10.51516 > 10.211.55.1.53: 23956+ A? www.baidu.com. (31)
+10:25:31.490843 IP 10.211.55.1.53 > 10.211.55.10.51516: 23956 3/13/9 CNAME www.a.shifen.com., A 14.215.177.38, A 14.215.177.39 (506)
+```
+
+#### 输出 ASCII 格式
+
+`-A` 用 ASCII 打印报文内容：
+
+```bash
+tcpdump -i any -nn port 80 -A
+
+11:04:25.793298 IP 183.57.82.231.80 > 10.211.55.10.40842: Flags [P.], seq 1:1461, ack 151, win 16384, length 1460
+HTTP/1.1 200 OK
+Server: Tengine
+Content-Type: application/javascript
+Content-Length: 63522
+Connection: keep-alive
+Vary: Accept-Encoding
+Date: Wed, 13 Mar 2019 11:49:35 GMT
+Expires: Mon, 02 Mar 2020 11:49:35 GMT
+Last-Modified: Tue, 05 Mar 2019 23:30:55 GMT
+ETag: W/"5c7f06af-f822"
+Cache-Control: public, max-age=30672000
+Access-Control-Allow-Origin: *
+Served-In-Seconds: 0.002
+```
+
+#### 限制包大小
+
+当包体很大，可以用 `-s` 截取部分报文内容，一般和 `-A` 一起使用。
+
+```bash
+# 查看每个包体前 500 字节
+tcpdump -i any -nn port 80 -A -s 500
+```
+
+显示包体所有内容，可以加上 `-s 0`。
+
+#### 只抓取 5 个报文
+
+**使用 `-c number` 命令可以抓取 number 个报文后退出**。
+
+```bash
+tcpdump -i any -nn port 80  -c 5
+```
+
+#### 输出到文件
+
+```bash
+tcpdump -i any port 80 -w test.pcap
+```
+
+生成的 pcap 文件就可以用 wireshark 打开进行更详细的分析。
+
+#### 显示绝对序号
+
+默认情况下，tcpdump 显示的是从 0 开始的相对序号。如果想查看真正的绝对序号，可以用 `-S` 选项。
+
+```bash
+# 没有 -S
+tcpdump -i any port 80 -nn
+
+12:12:37.832165 IP 10.211.55.10.46102 > 36.158.217.230.80: Flags [P.], seq 1:151, ack 1, win 229, length 150
+12:12:37.832272 IP 36.158.217.230.80 > 10.211.55.10.46102: Flags [.], ack 151, win 16384, length 0
+
+# 加了 -S 
+tcpdump -i any port 80 -nn -S 
+
+12:13:21.863918 IP 10.211.55.10.46074 > 36.158.217.223.80: Flags [P.], seq 4277123624:4277123774, ack 3358116659, win 229, length 150
+12:13:21.864091 IP 36.158.217.223.80 > 10.211.55.10.46074: Flags [.], ack 4277123774, win 16384, length 0
+```
+
+#### 运算符
+
+tcpdump 可以用布尔运算符 `and`（`&&`）、`or`（`||`）、`not`（`!`）来组合出任意复杂的过滤器。
+
+```bash
+# 抓取 ip 为 10.211.55.10 并且目的端口为 3306 的数据包
+tcpdump -i any host 10.211.55.10 and dst port 3306
+
+# 抓取源 ip 为 10.211.55.10，目标端口除了 22 以外所有的流量
+tcpdump -i any src 10.211.55.10 and not dst port 22
+```
+
+#### 分组
+
+如果要抓取：来源 ip 为 `10.211.55.10` 且目标端口为 3306 或 6379 的包，如果按照下面的方式写，就会报错：
+
+```bash
+tcpdump -i any src 10.211.55.10 and (dst port 3306 or 6379)
+```
+
+因为 `()` 是不允许的。这时候可以使用单引号 `'` 把复杂的组合条件包起来：
+
+```bash
+tcpdump -i any 'src 10.211.55.10 and (dst port 3306 or 6379)'
+```
+
+##### 显示所有的 RST 包
+
+```bash
+tcpdump 'tcp[13] & 4 != 0'
+```
+
+TCP 首部中 offset 为 13 的字节的第 3 比特位就是 RST。`tcp[13]` 表示 tcp 头部中偏移量为 13 字节。`!=0` 表示当前 bit 置 1，即存在此标记位，跟 4 做与运算是因为 RST 在 TCP 的标记位的位置在第 3 位(00000100)。
+
+##### 过滤 SYN + ACK 包
+
+```bash
+tcpdump 'tcp[13] & 18 != 0'
+```
+
