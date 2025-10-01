@@ -1,23 +1,18 @@
-# This workflow will triage pull requests and apply a label based on the
-# paths that are modified in the pull request.
-#
-# To use this workflow, you will need to set up a .github/labeler.yml
-# file with configuration.  For more information, see:
-# https://github.com/actions/labeler
+# Works with https://github.com/actions/labeler/
+# Below this line, the keys are labels to be applied, and the values are the file globs to match against.
 
-name: Labeler
-on: [pull_request_target]
+cloud:
+  - changed-files:
+      - any-glob-to-any-file: content/docs/cloud/*
 
-jobs:
-  label:
+linux:
+  - changed-files:
+      - any-glob-to-any-file: content/docs/linux/*
 
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
+cicd:
+  - changed-files:
+      - any-glob-to-any-file: ["content/docs/jenkins/*", "content/docs/terraform/*"]
 
-    steps:
-    - uses: actions/checkout@v5
-    - uses: actions/labeler@v5
-      with:
-        repo-token: "${{ secrets.PAT }}"
+k8s:
+  - changed-files:
+      - any-glob-to-any-file: content/docs/kubernetes/*
