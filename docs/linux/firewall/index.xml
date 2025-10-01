@@ -275,4 +275,50 @@ title="Copy code"
 &lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
 &lt;/button&gt;
 &lt;/div&gt;
-&lt;/div&gt;</description></item><item><title>firewalld</title><link>https://shipengqi.github.io/devops-learn/docs/linux/firewall/02_firewalld/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/devops-learn/docs/linux/firewall/02_firewalld/</guid><description/></item></channel></rss>
+&lt;/div&gt;</description></item><item><title>firewalld</title><link>https://shipengqi.github.io/devops-learn/docs/linux/firewall/02_firewalld/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/devops-learn/docs/linux/firewall/02_firewalld/</guid><description>
+&lt;p&gt;firewalld 的使用比 iptables 简单，主要区别：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;firewalld 使用区域和服务而不是链式规则。&lt;/li&gt;
+&lt;li&gt;它动态管理规则集，允许更新规则而不破坏现有会话和连接。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;使用：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;systemctl start|stop|enable|disbale firewalld.service&lt;/code&gt; 控制 firewalld 服务。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;firewqll-cmd&lt;/code&gt; 是 firewalld 配置命令。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;iptables 和 firewalld 同时运行会产生冲突，应该关闭其中一个&lt;/strong&gt;。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 查看状态&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="o"&gt;[&lt;/span&gt;root@shcCentOS72VM07 ~&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="c1"&gt;# firewall-cmd --state&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 重新加载配置&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="o"&gt;[&lt;/span&gt;root@shcCentOS72VM07 ~&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="c1"&gt;# firewall-cmd --reload&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 查看具体信息&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="o"&gt;[&lt;/span&gt;root@shcCentOS72VM07 ~&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="c1"&gt;# firewall-cmd --list-all&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;public &lt;span class="o"&gt;(&lt;/span&gt;active&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="c1"&gt;# public 就是一个区域 zone&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; target: default
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; icmp-block-inversion: no
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; interfaces: eth0
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; sources: 10.0.0.1 10.0.0.1/24
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; services: ssh dhcpv6-client
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; ports: 80/tcp 23/tcp
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; protocols:
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; masquerade: no
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; forward-ports:
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; sources-ports:
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; icmp-blocks:
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; rich rules:
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 上面的输出表示 public zone 绑定了 eth0 网口，&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# source IP 为 10.0.0.1 10.0.0.1/24 的请求可以访问 80 端口和 23端口，还可以访问 ssh 服务和 dhcpv6-client 服务。&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="o"&gt;[&lt;/span&gt;root@shcCentOS72VM07 ~&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="c1"&gt;# &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>
