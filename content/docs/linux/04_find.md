@@ -5,7 +5,7 @@ weight: 4
 
 ## find
 
-find 命令用来在指定目录下查找文件。`find <文件路径> <查找条件> [补充条件]`。
+find 命令用来在指定目录下查找文件。格式：`find <文件路径> <查找条件> [补充条件]`。
 
 ```bash
 [root@pooky ~]# find /etc -name pass*   # 查找 /etc 目录下 pass 前缀的文件

@@ -5,11 +5,11 @@ title: 主要内容
 ## 主要内容
 
 {{< cards cols="2" >}}
-{{< card link="/devops-learn/docs/linux" title="Linux" >}}
-{{< card link="/devops-learn/docs/kubernetes" title="Kubernetes">}}
-{{< card link="/devops-learn/docs/jenkins" title="Jenkins" >}}
-{{< card link="/devops-learn/docs/cLoud" title="Cloud" >}}
-{{< card link="/devops-learn/docs/terraform" title="Terroform" >}}
+{{< card link="/devops-learn/docs/linux" title="Linux" icon="linux">}}
+{{< card link="/devops-learn/docs/kubernetes" title="Kubernetes" icon="k8s" >}}
+{{< card link="/devops-learn/docs/jenkins" title="Jenkins" icon="jenkins" >}}
+{{< card link="/devops-learn/docs/cLoud" title="Cloud" icon="my-cloud" >}}
+{{< card link="/devops-learn/docs/terraform" title="Terroform" icon="tf" >}}
 {{< /cards >}}
 
 

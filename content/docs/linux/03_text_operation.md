@@ -129,16 +129,16 @@ sed 's/\[.*\] //' error.log | sort | uniq -c
 
 ## sort
 
-对文本行进行排序，几乎总是作为数据管道（pipe）的关键一环，与 `uniq`, `awk`, `head` 等命令组合，用于日志分析、数据统计和报告生成。
+对文本行进行排序，一般都是作为数据管道（pipe）的关键一环，与 `uniq`, `awk`, `head` 等命令组合，用于日志分析、数据统计和报告生成。
 
 常用参数：
 
 - `-n`：按数字大小进行排序，而不是字母顺序。
-- `-r` `--reverse`：逆序排序（降序）。
+- `-r`、`--reverse`：逆序排序（降序）。
 - `-k`：指定排序的键。
-- `-t` `--field-separator=SEP` 指定字段分隔符，默认是空格。处理 CSV 文件或以特定字符（如 `:, ,`）分隔的日志。
-- `-u` `--unique`：在排序的同时去除重复行。
-- `-o` `--output=FILE`：将结果输出到指定文件，可以覆盖原文件。
+- `-t`、`--field-separator=SEP` 指定字段分隔符，默认是空格。处理 CSV 文件或以特定字符（如 `:, ,`）分隔的日志。
+- `-u`、`--unique`：在排序的同时去除重复行。
+- `-o`、`--output=FILE`：将结果输出到指定文件，可以覆盖原文件。
 - **`-h`: 人类可读数字排序**，能正确比较 2K, 1M, 100G 的大小。
 
 ```bash
@@ -151,7 +151,7 @@ sort -t ':' -nk 3 /etc/passwd
 
 
 {{< callout type="info" >}}
-万能管道公式：
+**万能管道公式**：
 
 `获取数据 (awk/grep/sed) -> 排序 (sort) -> 去重统计 (uniq -c) -> 再次排序 (sort -nr) -> 取顶部结果 (head)`
 {{< /callout >}}
@@ -175,9 +175,9 @@ sort -t ':' -nk 3 /etc/passwd
 `sed 's/old/new/' filename`，将文件中所有的 `old` 替换为 `new`。
 
 - `sed -e 's/old/new/' -e 's/old/new/' filename ...`，**可以执行多次替换脚本但是不能省略 `-e`**。
-- `sed -i 's/old/nnew/' 's/old/new/' filename ...`，直接修改文件内容
-- `sed 's/foo/bar/g' file.txt` 将全文所有的 foo 替换为 bar
-  - `g`：全局替换，**不加 `g` 只替换每一行中第一个匹配到的** "foo"
+- `sed -i 's/old/nnew/' 's/old/new/' filename ...`，直接修改文件内容。
+- `sed 's/foo/bar/g' file.txt` 将全文所有的 foo 替换为 bar。
+  - `g`：全局替换，**不加 `g` 只替换每一行中第一个匹配到的** "foo"。
   - `p`：打印发生替换的那一行。与 `-n` 选项连用。
   - `i` 或 `I`：忽略大小写进行匹配。
 
@@ -185,8 +185,8 @@ sort -t ':' -nk 3 /etc/passwd
 
 `sed /匹配模式/d` 删除匹配到的行：
 
-- `sed '/^#/d' file.txt`，删除所有以 `#` 开头的行
-- `sed 's/^/# /' file.txt`，在每一行的行首添加 `#`，相当于注释掉所有行
+- `sed '/^#/d' file.txt`，删除所有以 `#` 开头的行。
+- `sed 's/^/# /' file.txt`，在每一行的行首添加 `#`，相当于注释掉所有行。
 
 ### 打印
 
@@ -214,9 +214,9 @@ sort -t ':' -nk 3 /etc/passwd
 
 ### 行范围
 
-- `n`：第 n 行。`sed '5s/foo/bar/'` 只替换第 5 行的 foo
-- `n,m`：第 n 到 m 行。`sed '10,20s/foo/bar/g'`
-- `$`：最后一行。`sed '$s/foo/bar/'`
+- `n`：第 n 行。`sed '5s/foo/bar/'` 只替换第 5 行的 foo。
+- `n,m`：第 n 到 m 行。`sed '10,20s/foo/bar/g'`。
+- `$`：最后一行。`sed '$s/foo/bar/'`。
 - `/regexp/`：匹配正则表达式的行。`sed '/start/,/end/d'` 删除从包含 start 的行到包含 end 的行之间的所有内容。
 
 
@@ -270,8 +270,8 @@ awk 一般用于对文本内容进行统计，按需要的格式进行输出。�
 
 awk 和 sed 的区别：
 
-- awk 用于比较规范的文本处理，用于统计数量并输出指定字段
-- sed 一般用于把不规范的文本处理为规范的文本
+- awk 用于比较规范的文本处理，用于统计数量并输出指定字段。
+- sed 一般用于把不规范的文本处理为规范的文本。
 
 awk 的流程控制：
 
@@ -291,7 +291,7 @@ awk 的流程控制：
 
 - **`$1` `$2` ... `$n` 表示每一个字段，`$0` 表示当前行**，`awk '{print $1, $2, $3} filename'`
 - **$NF 是最后一个字段，和 `NF` 不一样**。
-- **`-F` 改变字段的分隔符**，`awk -F ',' '{print $1, $2, $3}' filename`，分隔符可以使用正则表达式
+- **`-F` 改变字段的分隔符**，`awk -F ',' '{print $1, $2, $3}' filename`，分隔符可以使用正则表达式。
 
 系统变量：
 
@@ -306,10 +306,10 @@ awk 的流程控制：
 常用参数：
 
 - `-F`：指定输入字段分隔符。这是最常用的参数。
-  - `awk -F: '{print $1}' /etc/passwd` // 使用冒号 : 作为分隔符
-  - `awk -F'[ :]' '{print $2}' file` // 使用空格或冒号作为分隔符（正则表达式）
-- `-v`：定义变量，用于从 Shell 向 awk 脚本传递值。`awk -v name="Alice" '{print name, $1}' file.txt`
-- `-f`：从脚本文件中读取 awk 命令，用于复杂的脚本。`awk -f script.awk data.txt`
+  - `awk -F: '{print $1}' /etc/passwd` // 使用冒号 : 作为分隔符。
+  - `awk -F'[ :]' '{print $2}' file` // 使用空格或冒号作为分隔符（正则表达式）。
+- `-v`：定义变量，用于从 Shell 向 awk 脚本传递值。`awk -v name="Alice" '{print name, $1}' file.txt`。
+- `-f`：从脚本文件中读取 awk 命令，用于复杂的脚本。`awk -f script.awk data.txt`。
 
 ### 应用场景
 
@@ -604,13 +604,13 @@ user4 92.5
 
 ```
 
-- `-f` 加载 awk 文件
+- `-f` 加载 awk 文件。
 - `avg.awk` 文件的内容：`{ sum=0; for(column=2;column<=NF;column++) sum+=$column; avg[$1]=sum/(NF-1); }END{ for( user in avg) print user, avg[user]}`。
 
 命令行参数数组：
 
-- `ARGC` 命令行参数数组的长度
-- `ARGV` 命令行参数数组
+- `ARGC` 命令行参数数组的长度。
+- `ARGV` 命令行参数数组。
 
 ```bash
 [root@SGDLITVM0905 ~]# cat arg.awk
@@ -674,14 +674,13 @@ awk 函数：
   - `sin()` `cos()` `int()` `rand()` `srand()`
 - 字符串函数
   - `toupper(s)` `tolower(s)` `length(s)` `split(s,a,sep)` `match(s,r)` `substr(s,p,n)`
-- 自定义函数，自定义函数一定要写在 `BEGIN` 主循环 `END` 例程的外面
-
-```bash
-function 函数名 ( 参数 ) {
-  awk 语句
-  return awk 变量
-}
-```
+- 自定义函数，自定义函数一定要写在 `BEGIN` 主循环 `END` 例程的外面：
+  ```bash
+  function 函数名 ( 参数 ) {
+    awk 语句
+    return awk 变量
+  }
+  ```
 
 示例：
 
