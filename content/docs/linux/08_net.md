@@ -6,13 +6,13 @@ weight: 8
 net-tools 是 CentOS 7 之前的版本使用的网络管理工具，而 iproute2 是 CentOS 7 之后主推的网络管理工具。
 
 net-tools 包括：
-- ifconfig 网卡配置
-- route 网关配置
-- netstat 查看网络状态
+- ifconfig 网卡配置；
+- route 网关配置；
+- netstat 查看网络状态。
 
 iproute2 包括：
-- ip：包含里 ifconfig 和 route 的功能
-- ss：类似 netstat ，更快更强
+- ip：包含里 ifconfig 和 route 的功能；
+- ss：类似 netstat ，更快更强。
 
 ## ip 命令
 
@@ -43,12 +43,12 @@ ip route 是 iproute2 软件套件的一部分，用于查看和管理内核中�
 
 | 部分 | 含义 | 示例 | 解释 |
 | --- | --- | --- | --- |
-| 目标网络 (Destination) | 数据包要去的IP网段 | 192.168.1.0/24 | 这条规则适用于去往 192.168.1.x 的所有包 |
-| via (网关/Gateway) | 下一跳路由器的IP地址 | via 192.168.0.1 | 把数据包发给这个地址（路由器）去处理 |
-| dev (接口/Device) | 数据包应该从哪个网络接口发出 | dev eth0 | 数据包从 eth0 网卡发出 |
-| proto (协议/Protocol) | 此路由条目的来源 | proto kernel | 由内核自动生成（直连路由）|
-| scope (作用域) | 路由的有效范围 | scope link | 仅适用于直连链路 | 
-| metric (度量值) | 路由的优先级（成本）| metric 100 | 值越小，优先级越高 |
+| **Destination** (目标网络) | 数据包要去的IP网段 | `192.168.1.0/24` | 这条规则适用于去往 `192.168.1.x` 的所有包 |
+| **via** (网关/Gateway) | 下一跳路由器的IP地址 | `via 192.168.0.1` | 把数据包发给这个地址（路由器）去处理 |
+| **dev** (接口/Device) | 数据包应该从哪个网络接口发出 | `dev eth0` | 数据包从 eth0 网卡发出 |
+| proto (协议/Protocol) | 此路由条目的来源 | `proto kernel `| 由内核自动生成（直连路由）|
+| scope (作用域) | 路由的有效范围 | `scope link` | 仅适用于直连链路 | 
+| metric (度量值) | 路由的优先级（成本）| `metric 100` | 值越小，优先级越高 |
 
 `ip route show` 示例：
 
@@ -71,13 +71,8 @@ local 192.168.0.100 dev eth0 proto kernel scope host src 192.168.0.100
    - 这条路由通常不会在 `ip route show` 中直接显示，需要使用 `ip route show table local` 查看。它管理发往本机自身 IP 的数据包。
    - `local`：关键字。明确标识这是一条本地路由，与普通路由的网段格式（如 `192.168.0.0/24`）不同。
    - `192.168.0.100`：目标地址。这就是本机配置的 IP 地址。它是一个精确的主机路由（`/32`），而不是一个网段。
-   - **`scope host`：作用域。这是最关键的部分**！`scope host` 意味着这条路由**仅在本机内部有效，绝不可能被转发到网络上去**。它划清了一条清晰的边界：这是“我自己”。
-
-dev lo：关联接口。这个 IP 地址被配置在 lo 接口上。
-
-proto kernel：协议。由内核自动生成。
-
-scope host：作用域。这是最关键的部分！scope host 意味着这条路由仅在本机内部有效，绝不可能被转发到网络上去。它划清了一条清晰的边界：这是“我自己”。
+   - `scope host`：作用域。这是最关键的部分！**`scope host` 意味着这条路由仅在本机内部有效，绝不可能被转发到网络上去。它划清了一条清晰的边界：这是“我自己”**。
+   - `proto kernel`：协议。由内核自动生成。
 
 #### 路由查询过程
 
@@ -122,11 +117,11 @@ scope host：作用域。这是最关键的部分！scope host 意味着这条�
 
 过滤选项:
 
-- `sport = :端口号`：过滤源端口。`ss sport = :80`
-- `dport = :端口号`：过滤目标端口。`ss dport = :443`
-- `src IP地址`：过滤源 IP 地址。`ss src 192.168.1.100`
-- `dst IP地址`：过滤目标 IP 地址。`ss dst 8.8.8.8`
-- `state`：过滤连接状态。`ss state established`
+- `sport = :端口号`：过滤源端口。`ss sport = :80`。
+- `dport = :端口号`：过滤目标端口。`ss dport = :443`。
+- `src IP地址`：过滤源 IP 地址。`ss src 192.168.1.100`。
+- `dst IP地址`：过滤目标 IP 地址。`ss dst 8.8.8.8`。
+- `state`：过滤连接状态。`ss state established`。
 
 输出选项:
 
@@ -175,6 +170,7 @@ FRAG      0         0         0
 ```
 
 排查特定服务或端口的问题：
+
 ```bash
 # 1. 查看谁在连接我的MySQL服务（3306端口）
 ss -tn dst :3306
@@ -201,17 +197,17 @@ ss -tni
 2. `traceroute` 和 `mtr` 辅助 `ping` 命令，在 `ping` 通网络之后，如果网络通信还是有问题，
    - 可以使用 `traceroute` 可以查看网络中每一跳的网络质量。
    - `mtr` 可以检测网络中是否有丢包。
-- `nslookup` 查看域名对应的 IP。
-- 如果主机可以连接，但是服务仍然无法访问，使用 `telnet` 检查端口状态。
-- 如果端口没有问题，仍然无法访问，可以使用 `tcpdump` 进行抓包，更细致的查看网络问题。
-- 使用 `netstat` 和 `ss`，查看服务范围。
+3. `nslookup` 查看域名对应的 IP。
+4. 如果主机可以连接，但是服务仍然无法访问，使用 `telnet` 检查端口状态。
+5. 如果端口没有问题，仍然无法访问，可以使用 `tcpdump` 进行抓包，更细致的查看网络问题。
+6. 使用 `netstat` 和 `ss`，查看服务范围。
 
 ### traceroute
 
-`traceroute -w 1 www.baidu.com`，
+`traceroute -w 1 www.baidu.com`：
 
 - `-w` 等待响应的超时时间，单位为秒，`-w 1` 表示某个 IP 超时的最大等待时间为 1 秒。
-- `-n` 显示 IP 地址
+- `-n` 显示 IP 地址。
 - `-m` 设置最大跳数，默认 64。
 - `-q` 每个网关发送数据包个数，默认 3。
 - `-p` 指定使用的目标端口。
