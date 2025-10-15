@@ -12,10 +12,10 @@ IaC 是 Infrastructure as Code 的缩写，即基础设施即代码。
 
 IaC 工具：
 
-- Azure：ARM Template 和 Bicep
-- GCP：Google Cloud Deployment Manager
-- AWS：CloudFormation
-- 全平台：Terraform
+- Azure：ARM Template 和 Bicep；
+- GCP：Google Cloud Deployment Manager；
+- AWS：CloudFormation；
+- 全平台：Terraform。
 
 
 这些 IaC 工具采用了完全声明式模型。用户不再关注过程步骤，而是在配置文件中**定义了他们期望的基础设施状态**。
