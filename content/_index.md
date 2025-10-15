@@ -10,6 +10,7 @@ title: 主要内容
 {{< card link="/devops-learn/docs/jenkins" title="Jenkins" icon="jenkins" >}}
 {{< card link="/devops-learn/docs/cLoud" title="Cloud" icon="my-cloud" >}}
 {{< card link="/devops-learn/docs/terraform" title="Terroform" icon="tf" >}}
+{{< card link="/devops-learn/docs/sre" title="SRE 实践" icon="sre" >}}
 {{< /cards >}}
 
 
